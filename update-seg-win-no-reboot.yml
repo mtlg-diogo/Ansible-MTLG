@@ -1,0 +1,8 @@
+- name: Atualizar segurança no Windows
+  hosts: windows
+  tasks:
+    - name: Instalar apenas atualizações de segurança no Windows Sem Reiniciar a maquina.
+      win_updates:
+        category_names:
+          - SecurityUpdates
+        reboot: no
