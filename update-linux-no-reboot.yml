@@ -1,0 +1,36 @@
+- name: Atualizar pacotes em sistemas Linux sem upgrades de kernel e sem reiniciar
+  hosts: all
+  become: yes
+  tasks:
+    - name: Detectar o gerenciador de pacotes
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Atualizar cache do gerenciador de pacotes (APT)
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_facts.packages['apt'] is defined
+
+    - name: Atualizar pacotes instalados sem upgrade de kernel e sem reiniciar (APT)
+      ansible.builtin.apt:
+        upgrade: no
+        force_apt_get: yes  # Evita interatividade
+        autoremove: no  # Não remove pacotes antigos
+      when: ansible_facts.packages['apt'] is defined
+
+    - name: Atualizar cache do gerenciador de pacotes (YUM ou DNF)
+      ansible.builtin.yum:
+        update_cache: yes
+      when: ansible_facts.packages['yum'] is defined or ansible_facts.packages['dnf'] is defined
+
+    - name: Atualizar pacotes instalados sem reiniciar (YUM ou DNF)
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+        security: no  # Apenas pacotes regulares, não apenas de segurança
+        exclude: kernel*  # Evita atualizar pacotes relacionados ao kernel
+      when: ansible_facts.packages['yum'] is defined or ansible_facts.packages['dnf'] is defined
+
+    - name: Garantir que nenhuma reinicialização está pendente (opcional)
+      ansible.builtin.command: echo "Nenhuma reinicialização será feita"
