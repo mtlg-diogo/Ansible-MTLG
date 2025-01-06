@@ -1,8 +1,9 @@
-- name: Atualizar e reiniciar o Windows
+- name: INICIANDO PROCESSO DE ATUALIZAÇÃO E REBOOT ( CASO NECESSÁRIO )
   hosts: windows
   tasks:
-    - name: Instalar atualizações no Windows e reiniciar se necessário
+    - name: VERIFICANDO E INSTALANADO UPDATES
       ansible.windows.win_updates:
         category_names:
           - SecurityUpdates
         reboot: yes
+        reboot_timeout: 600  # Tempo em segundos para aguardar o reinício
