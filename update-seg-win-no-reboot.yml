@@ -1,8 +1,8 @@
-- name: Atualizar segurança no Windows
+- name: Atualizar e reiniciar o Windows
   hosts: windows
   tasks:
-    - name: Instalar apenas atualizações de segurança no Windows Sem Reiniciar a maquina.
-      win_updates:
+    - name: Instalar atualizações no Windows e reiniciar se necessário
+      ansible.windows.win_updates:
         category_names:
           - SecurityUpdates
-        reboot: no
+        reboot: yes
