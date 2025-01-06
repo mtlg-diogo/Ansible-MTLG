@@ -1,9 +1,8 @@
-- name: INICIANDO PROCESSO DE ATUALIZAÇÃO DAS MAQUINAS
+- name: INICIANDO PROCESSO DE ATUALIZAÇÃO DAS MÁQUINAS
   hosts: windows
   tasks:
-    - name: BAIXANDO E INSTALANDO ATUALIZAÇÃO QUE NÃO PRECISE REINICIAR A MAQUINA.
+    - name: BAIXANDO E INSTALANDO ATUALIZAÇÕES DE SEGURANÇA
       ansible.windows.win_updates:
         category_names:
           - SecurityUpdates
         reboot: no  # Não reinicia a máquina automaticamente
-        exclude_reboot: yes  # Exclui atualizações que requerem reinício
