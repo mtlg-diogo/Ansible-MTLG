@@ -1,24 +1,24 @@
 ---
-- name: Automação de Serviços | Multilog S/A | Departamento de Infraestrutura |
+- name: Automação de Serviços | Multilog S/A | Departamento de Infraestrutura
   hosts: windows
   tasks:
-    - name: Verificando status atual dos serviços.
+    - name: Verificando status atual dos serviços
       win_service_info:
         name: "{{ item }}"
       loop:
-        - "wuauserv"
+        - "wuauserv"  # Adicione os serviços que deseja gerenciar aqui
       register: services_status
 
-    - name: Parando todos os Serviços que estão rodando neste momento.
+    - name: Parando todos os serviços que estão rodando neste momento
       win_service:
-        name: "{{ item.name }}"
+        name: "{{ item.service.name }}"
         state: stopped
-      loop: "{{ services_status.results | map(attribute='service') | selectattr('state', 'eq', 'running') | list }}"
+      loop: "{{ services_status.results | selectattr('state', 'eq', 'running') | list }}"
       when: item.state == "running"
 
-    - name: Iniciando todos os serviços parados para normalizar as aplicações da Multilog S/A
+    - name: Iniciando todos os serviços
       win_service:
         name: "{{ item }}"
         state: started
       loop:
-        - "wuauserv"
+        - "wuauserv"  # Lista de todos os serviços para garantir que sejam iniciados
