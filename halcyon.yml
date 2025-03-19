@@ -1,0 +1,50 @@
+---
+  - name: Instalar Halcyon via Ansible
+    hosts: target_linux
+    become: yes
+    vars:
+      source_path: "\\\\srv-mtlg-37\\UPDATE-GPO\\halcyonar-linux-x86_64-v1.0.4017.0.tar"
+      dest_path: "/root1/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
+      halcyon_token: "53H3TxddTBOal/6CBovJxAEA"
+    
+    tasks:
+      - name: Instalar pacotes necessários (cifs-utils para montar compartilhamento SMB)
+        ansible.builtin.package:
+          name: cifs-utils
+          state: present
+  
+      - name: Criar diretório temporário para montagem do compartilhamento
+        ansible.builtin.file:
+          path: "/mnt/smb_update_gpo"
+          state: directory
+  
+      - name: Montar compartilhamento SMB para acessar o arquivo
+        ansible.builtin.mount:
+          path: "/mnt/smb_update_gpo"
+          src: "//srv-mtlg-37/UPDATE-GPO"
+          fstype: cifs
+          opts: "username=seu_usuario,password=sua_senha,ro"
+          state: mounted
+  
+      - name: Copiar o arquivo do compartilhamento SMB para o Linux local
+        ansible.builtin.copy:
+          src: "/mnt/smb_update_gpo/halcyonar-linux-x86_64-v1.0.4017.0.tar"
+          dest: "{{ dest_path }}"
+          remote_src: yes
+          mode: '0644'
+  
+      - name: Desmontar o compartilhamento SMB
+        ansible.builtin.mount:
+          path: "/mnt/smb_update_gpo"
+          state: absent
+  
+      - name: Extrair o arquivo tar.gz
+        ansible.builtin.command:
+          cmd: "tar xzvf {{ dest_path }}"
+          chdir: "/root1"
+      
+      - name: Executar o script de instalação
+        ansible.builtin.shell:
+          cmd: "HALCYON_TOKEN='{{ halcyon_token }}' bash install.sh"
+          chdir: "/root1"
+  
