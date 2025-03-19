@@ -1,91 +1,105 @@
----
-  - name: Instalar Halcyon via Ansible
-    hosts: target_linux
-    become: yes
-    vars:
-      source_path: "\\\\srv-mtlg-37\\UPDATE-GPO\\halcyonar-linux-x86_64-v1.0.4017.0.tar"
-      dest_path: "/root1/halcyonar-linux-x86_64-v1.0.4017.0.tar"
-      halcyon_token: "53H3TxddTBOal/6CBovJxAEA"
-      smb_mount_path: "/mnt/smb_update_gpo"
-      smb_username: "seu_usuario"
-      smb_password: "sua_senha"
+- name: Instalar Halcyon via Ansible
+  hosts: target_linux
+  become: yes
+  vars:
+    source_path: "\\\\srv-mtlg-37\\UPDATE-GPO\\halcyonar-linux-x86_64-v1.0.4017.0.tar"
+    dest_path: "/root1/halcyonar-linux-x86_64-v1.0.4017.0.tar"
+    halcyon_token: "53H3TxddTBOal/6CBovJxAEA"
+    smb_mount_path: "/mnt/smb_update_gpo"
+    smb_username: "seu_usuario"
+    smb_password: "sua_senha"
 
-    tasks:
-      - name: Verificar se o cifs-utils está instalado
-        ansible.builtin.shell: |
-          if command -v dpkg &>/dev/null; then
-            dpkg -l | grep -i cifs-utils
-          elif command -v rpm &>/dev/null; then
-            rpm -q cifs-utils
-          else
-            exit 1
-          fi
-        register: cifs_check
-        changed_when: false
-        failed_when: cifs_check.rc > 1
-        ignore_errors: yes
+  tasks:
+    - name: Verificar se o cifs-utils está instalado
+      ansible.builtin.shell: |
+        if command -v dpkg &>/dev/null; then
+          dpkg -l | grep -i cifs-utils
+        elif command -v rpm &>/dev/null; then
+          rpm -q cifs-utils
+        else
+          exit 1
+        fi
+      register: cifs_check
+      changed_when: false
+      failed_when: cifs_check.rc > 1
+      ignore_errors: yes
+      become: yes
 
-      - name: Instalar cifs-utils se não estiver instalado (Debian/Ubuntu)
-        ansible.builtin.apt:
-          name: cifs-utils
-          state: present
-          update_cache: yes
-        when: "'cifs-utils' not in cifs_check.stdout"
-        become: yes
+    - name: Instalar cifs-utils se não estiver instalado (Debian/Ubuntu)
+      ansible.builtin.apt:
+        name: cifs-utils
+        state: present
+        update_cache: yes
+      when: "'cifs-utils' not in cifs_check.stdout"
+      become: yes
 
-      - name: Instalar cifs-utils se não estiver instalado (RHEL/CentOS)
-        ansible.builtin.yum:
-          name: cifs-utils
-          state: present
-        when: "'cifs-utils' not in cifs_check.stdout"
-        become: yes
+    - name: Instalar cifs-utils se não estiver instalado (RHEL/CentOS)
+      ansible.builtin.yum:
+        name: cifs-utils
+        state: present
+      when: "'cifs-utils' not in cifs_check.stdout"
+      become: yes
 
-      - name: Criar diretório para montagem do compartilhamento
-        ansible.builtin.file:
-          path: "{{ smb_mount_path }}"
-          state: directory
-          mode: '0777'
-          owner: root
-          group: root
+    - name: Criar diretório para montagem do compartilhamento
+      ansible.builtin.file:
+        path: "{{ smb_mount_path }}"
+        state: directory
+        mode: '0777'
+        owner: root
+        group: root
+      become: yes
 
-      - name: Montar compartilhamento SMB para acessar o arquivo
-        ansible.builtin.command:
-          cmd: "mount -t cifs //srv-mtlg-37/UPDATE-GPO {{ smb_mount_path }} -o username={{ smb_username }},password={{ smb_password }},ro"
-        become: true
+    - name: Montar compartilhamento SMB para acessar o arquivo
+      ansible.builtin.command:
+        cmd: "mount -t cifs //srv-mtlg-37/UPDATE-GPO {{ smb_mount_path }} -o username={{ smb_username }},password={{ smb_password }},ro,vers=3.0"
+      become: yes
+      register: mount_status
+      failed_when: mount_status.rc != 0
+      changed_when: false
 
-      - name: Copiar o arquivo do compartilhamento SMB para o Linux local
-        ansible.builtin.copy:
-          src: "{{ smb_mount_path }}/halcyonar-linux-x86_64-v1.0.4017.0.tar"
-          dest: "{{ dest_path }}"
-          remote_src: yes
-          mode: '0644'
+    - name: Verificar se o arquivo já está copiado
+      ansible.builtin.stat:
+        path: "{{ dest_path }}"
+      register: file_check
+      become: yes
 
-      - name: Desmontar o compartilhamento SMB
-        ansible.builtin.command:
-          cmd: "umount {{ smb_mount_path }}"
-        become: true
-        ignore_errors: yes
+    - name: Copiar o arquivo do compartilhamento SMB para o Linux local
+      ansible.builtin.copy:
+        src: "{{ smb_mount_path }}/halcyonar-linux-x86_64-v1.0.4017.0.tar"
+        dest: "{{ dest_path }}"
+        remote_src: yes
+        mode: '0644'
+      when: not file_check.stat.exists
+      become: yes
 
-      - name: Remover diretório de montagem
-        ansible.builtin.file:
-          path: "{{ smb_mount_path }}"
-          state: absent
+    - name: Desmontar o compartilhamento SMB
+      ansible.builtin.command:
+        cmd: "umount {{ smb_mount_path }}"
+      become: yes
+      ignore_errors: yes
 
-      - name: Criar diretório de instalação do Halcyon
-        ansible.builtin.file:
-          path: "/root1/halcyon"
-          state: directory
-          mode: '0755'
+    - name: Remover diretório de montagem
+      ansible.builtin.file:
+        path: "{{ smb_mount_path }}"
+        state: absent
+      become: yes
 
-      - name: Extrair o arquivo tar para o diretório de instalação
-        ansible.builtin.shell:
-          cmd: "tar -xvf {{ dest_path }} -C /root1/halcyon"
-        become: true
-        args:
-          creates: "/root1/halcyon/install.sh"
+    - name: Criar diretório de instalação do Halcyon
+      ansible.builtin.file:
+        path: "/root1/halcyon"
+        state: directory
+        mode: '0755'
+      become: yes
 
-      - name: Executar o script de instalação do Halcyon
-        ansible.builtin.shell:
-          cmd: "HALCYON_TOKEN='{{ halcyon_token }}' bash install.sh"
-          chdir: "/root1/halcyon"
-        become: true
+    - name: Extrair o arquivo tar para o diretório de instalação
+      ansible.builtin.shell:
+        cmd: "tar -xvf {{ dest_path }} -C /root1/halcyon"
+      args:
+        creates: "/root1/halcyon/install.sh"
+      become: yes
+
+    - name: Executar o script de instalação do Halcyon
+      ansible.builtin.shell:
+        cmd: "HALCYON_TOKEN='{{ halcyon_token }}' bash install.sh"
+        chdir: "/root1/halcyon"
+      become: yes
