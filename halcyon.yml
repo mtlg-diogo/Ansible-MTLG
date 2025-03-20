@@ -24,11 +24,11 @@
     - name: Baixar Halcyon usando wget
       ansible.builtin.command:
         cmd: >
-          wget --no-check-certificate
-          -O /tmp/halcyon.tar.gz
+          wget --no-check-certificate -O /tmp/halcyon.tar.gz
           "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
       args:
         creates: /tmp/halcyon.tar.gz
+      become: yes
 
     - name: Garantir permissões corretas no arquivo baixado
       ansible.builtin.file:
@@ -36,6 +36,7 @@
         owner: root
         group: root
         mode: '0644'
+      become: yes
 
     - name: Extrair Halcyon
       ansible.builtin.unarchive:
@@ -44,7 +45,7 @@
         remote_src: yes
         owner: root
         group: root
-        extra_opts: [--no-overwrite-dir]
+        mode: '0755'
       become: yes
 
     - name: Criar serviço systemd para Halcyon
@@ -65,13 +66,16 @@
           [Install]
           WantedBy=multi-user.target
         mode: '0644'
+      become: yes
 
     - name: Recarregar systemd
       ansible.builtin.systemd:
         daemon_reload: yes
+      become: yes
 
     - name: Habilitar e iniciar Halcyon
       ansible.builtin.systemd:
         name: halcyon
         enabled: yes
         state: started
+      become: yes
