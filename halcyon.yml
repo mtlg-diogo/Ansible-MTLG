@@ -1,72 +1,69 @@
 ---
-  - name: Instalar e Configurar Halcyon
-    hosts: all
-    become: yes
-    tasks:
-  
-      - name: Instalar pacotes necessários
-        become: yes
-        become_method: sudo
-        ansible.builtin.package:
-          name: 
-            - tar
-            - wget
-            - systemd
-          state: present
-  
-      - name: Criar diretório para Halcyon
-        become: yes
-        ansible.builtin.file:
-          path: /opt/halcyon
-          state: directory
-          owner: root
-          group: root
-          mode: '0755'
-  
-      - name: Baixar Halcyon usando wget
-        ansible.builtin.command:
+- name: Instalar e Configurar Halcyon
+  hosts: all
+  become: yes
+
+  tasks:
+
+    - name: Instalar pacotes necessários
+      ansible.builtin.package:
+        name:
+          - tar
+          - wget
+          - systemd
+        state: present
+
+    - name: Criar diretório para Halcyon
+      ansible.builtin.file:
+        path: /opt/halcyon
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Baixar Halcyon usando wget
+      ansible.builtin.command:
         cmd: >
-          wget --no-check-certificate 
+          wget --no-check-certificate
           -O /tmp/halcyon.tar.gz
           "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
+      args:
+        creates: /tmp/halcyon.tar.gz  # Evita baixar se o arquivo já existir
 
-  
-      - name: Extrair Halcyon
-        become: yes
-        ansible.builtin.unarchive:
-          src: "/tmp/halcyon.tar.gz"
-          dest: "/opt/halcyon"
-          remote_src: yes
-  
-      - name: Criar serviço systemd para Halcyon
-        become: yes
-        ansible.builtin.copy:
-          dest: /etc/systemd/system/halcyon.service
-          content: |
-            [Unit]
-            Description=Halcyon Service
-            After=network.target
-  
-            [Service]
-            ExecStart=/opt/halcyon/halcyonar
-            WorkingDirectory=/opt/halcyon
-            Restart=always
-            User=root
-            Group=root
-  
-            [Install]
-            WantedBy=multi-user.target
-          mode: '0644'
-  
-      - name: Recarregar systemd
-        become: yes
-        ansible.builtin.systemd:
-          daemon_reload: yes
-  
-      - name: Habilitar e iniciar Halcyon
-        become: yes
-        ansible.builtin.systemd:
-          name: halcyon
-          enabled: yes
-          state: started
-  
+    - name: Extrair Halcyon
+      ansible.builtin.unarchive:
+        src: "/tmp/halcyon.tar.gz"
+        dest: "/opt/halcyon"
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Criar serviço systemd para Halcyon
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/halcyon.service
+        content: |
+          [Unit]
+          Description=Halcyon Service
+          After=network.target
+
+          [Service]
+          ExecStart=/opt/halcyon/halcyonar
+          WorkingDirectory=/opt/halcyon
+          Restart=always
+          User=root
+          Group=root
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+
+    - name: Recarregar systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Habilitar e iniciar Halcyon
+      ansible.builtin.systemd:
+        name: halcyon
+        enabled: yes
+        state: started
