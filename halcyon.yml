@@ -18,7 +18,22 @@
         cmd: "tar xzvf /tmp/halcyon.tar.gz"
         chdir: "/tmp"
 
+    - name: Remover Halcyon existente (se houver)
+      ansible.builtin.command:
+        cmd: "apt remove -y halcyonagent"
+      ignore_errors: yes  # Evita falha caso o pacote não esteja instalado
+
     - name: Executar script de instalação com token
       ansible.builtin.shell:
-        cmd: "HALCYON_TOKEN='53H3TxddTBOal/6CBovJxAEA' bash install.sh"
+        cmd: "HALCYON_TOKEN='53H3TxddTBOal/6CBovJxAEA' bash -c 'bash install.sh'"
         chdir: "/tmp"
+
+    - name: Verificar status do serviço Halcyon
+      ansible.builtin.command:
+        cmd: "systemctl status halcyon"
+      register: halcyon_status
+      ignore_errors: yes
+
+    - name: Exibir saída do status do Halcyon
+      ansible.builtin.debug:
+        msg: "{{ halcyon_status.stdout_lines }}"
