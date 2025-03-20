@@ -13,6 +13,12 @@
       args:
         creates: /tmp/halcyon.tar.gz
 
-    - name: Executar comando de instalação
+    - name: Extrair Halcyon
       ansible.builtin.command:
-        cmd: "53H3TxddTBOal/6CBovJxAEA"
+        cmd: "tar xzvf /tmp/halcyon.tar.gz"
+        chdir: "/tmp"
+
+    - name: Executar script de instalação com token
+      ansible.builtin.shell:
+        cmd: "HALCYON_TOKEN='53H3TxddTBOal/6CBovJxAEA' bash install.sh"
+        chdir: "/tmp"
