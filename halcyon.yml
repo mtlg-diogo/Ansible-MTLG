@@ -5,6 +5,7 @@
     tasks:
   
       - name: Instalar pacotes necessários
+        become: yes
         ansible.builtin.package:
           name: 
             - tar
@@ -13,6 +14,7 @@
           state: present
   
       - name: Criar diretório para Halcyon
+        become: yes
         ansible.builtin.file:
           path: /opt/halcyon
           state: directory
@@ -21,18 +23,21 @@
           mode: '0755'
   
       - name: Baixar Halcyon do repositório GitHub
+        become: yes
         ansible.builtin.get_url:
           url: "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
           dest: "/tmp/halcyon.tar.gz"
           mode: '0644'
   
       - name: Extrair Halcyon
+        become: yes
         ansible.builtin.unarchive:
           src: "/tmp/halcyon.tar.gz"
           dest: "/opt/halcyon"
           remote_src: yes
   
       - name: Criar serviço systemd para Halcyon
+        become: yes
         ansible.builtin.copy:
           dest: /etc/systemd/system/halcyon.service
           content: |
@@ -52,10 +57,12 @@
           mode: '0644'
   
       - name: Recarregar systemd
+        become: yes
         ansible.builtin.systemd:
           daemon_reload: yes
   
       - name: Habilitar e iniciar Halcyon
+        become: yes
         ansible.builtin.systemd:
           name: halcyon
           enabled: yes
