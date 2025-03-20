@@ -28,7 +28,14 @@
           -O /tmp/halcyon.tar.gz
           "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
       args:
-        creates: /tmp/halcyon.tar.gz  # Evita baixar se o arquivo já existir
+        creates: /tmp/halcyon.tar.gz
+
+    - name: Garantir permissões corretas no arquivo baixado
+      ansible.builtin.file:
+        path: /tmp/halcyon.tar.gz
+        owner: root
+        group: root
+        mode: '0644'
 
     - name: Extrair Halcyon
       ansible.builtin.unarchive:
@@ -37,7 +44,8 @@
         remote_src: yes
         owner: root
         group: root
-        mode: '0755'
+        extra_opts: [--no-overwrite-dir]
+      become: yes
 
     - name: Criar serviço systemd para Halcyon
       ansible.builtin.copy:
