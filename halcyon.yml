@@ -21,25 +21,27 @@
         group: root
         mode: '0755'
 
-    - name: Baixar Halcyon usando wget
+    - name: Baixar Halcyon diretamente no diretório correto
       ansible.builtin.command:
         cmd: >
           wget --no-check-certificate
-          -O /tmp/halcyon.tar.gz
+          -O /opt/halcyon/halcyon.tar.gz
           "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
       args:
-        creates: /tmp/halcyon.tar.gz
+        creates: /opt/halcyon/halcyon.tar.gz
+      become: yes  # Força o download como root
 
-    - name: Garantir permissões corretas no arquivo baixado
+    - name: Ajustar permissões do arquivo baixado
       ansible.builtin.file:
-        path: /tmp/halcyon.tar.gz
+        path: /opt/halcyon/halcyon.tar.gz
         owner: root
         group: root
         mode: '0644'
+      become: yes  # Garante que root tem controle total do arquivo
 
-    - name: Extrair Halcyon
+    - name: Extrair Halcyon no diretório correto
       ansible.builtin.unarchive:
-        src: "/tmp/halcyon.tar.gz"
+        src: "/opt/halcyon/halcyon.tar.gz"
         dest: "/opt/halcyon"
         remote_src: yes
         owner: root
