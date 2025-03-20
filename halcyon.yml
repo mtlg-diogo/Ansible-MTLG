@@ -25,7 +25,7 @@
 
     - name: Executar script de instalação com token
       ansible.builtin.shell:
-        cmd: "HALCYON_TOKEN='53H3TxddTBOal/6CBovJxAEA' bash -c 'bash install.sh'"
+        cmd: "HALCYON_TOKEN='blahaha' bash -c 'bash install.sh'"
         chdir: "/tmp"
 
     - name: Verificar status do serviço Halcyon
