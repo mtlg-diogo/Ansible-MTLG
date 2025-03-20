@@ -24,7 +24,7 @@
           mode: '0755'
   
       - name: Baixar Halcyon usando wget
-      ansible.builtin.command:
+        ansible.builtin.command:
         cmd: >
           wget --no-check-certificate 
           -O /tmp/halcyon.tar.gz
