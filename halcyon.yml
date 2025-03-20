@@ -6,6 +6,7 @@
   
       - name: Instalar pacotes necessários
         become: yes
+        become_method: sudo
         ansible.builtin.package:
           name: 
             - tar
