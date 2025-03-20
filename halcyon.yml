@@ -26,7 +26,7 @@
       - name: Baixar Halcyon do repositório GitHub
         become: yes
         get_url:
-          url: "https://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@github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
+          url: "https://github.com/mtlg-diogo/Ansible-MTLG/releases/download/halcyonar/halcyonar-linux-x86_64-v1.0.4017.0.tar.gz"
           dest: "/tmp/halcyon.tar.gz"
           force: yes
   
